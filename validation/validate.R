@@ -80,10 +80,31 @@ fonts <- xml2::xml_find_all(doc_xml, "//w:rFonts", ns)
 check("Word Times New Roman", length(fonts) > 0 && all(xml2::xml_attr(fonts, "w:ascii", ns) == "Times New Roman"))
 pdf_text <- paste(pdftools::pdf_text("infografia/infografia_final.pdf"), collapse = " ")
 check("PDF créditos y estimación", grepl("Nery Molina", pdf_text, fixed = TRUE) && grepl("23218", pdf_text) && grepl("Estimación", pdf_text, fixed = TRUE))
+check("Infografía sin caracteres sustituidos", !grepl("?", pdf_text, fixed = TRUE) && !grepl("\uFFFD", pdf_text, fixed = TRUE))
+check("Encabezados sin numeración decorativa", !grepl("0[2-5] *[|]", pdf_text))
+check("Limitación de Prophet explícita", grepl("subestima", pdf_text, fixed = TRUE))
+doc_pdf <- "docs/explicacion_diseno.pdf"
+check("Documento PDF presente", file.exists(doc_pdf))
+doc_pdf_text <- paste(pdftools::pdf_text(doc_pdf), collapse = " ")
+doc_word_text <- paste(xml2::xml_text(xml2::xml_find_all(doc_xml, "//w:t", ns)), collapse = " ")
+compact <- function(x) gsub("[[:space:]]+", "", x)
+check("Word y PDF contienen el mismo texto", identical(compact(doc_pdf_text), compact(doc_word_text)))
+doc_fonts <- pdftools::pdf_fonts(doc_pdf)
+check("PDF de explicación Times New Roman", nrow(doc_fonts) > 0 && all(grepl("TimesNewRoman", doc_fonts$name)))
+doc_size <- pdftools::pdf_pagesize(doc_pdf)
+check("PDF de explicación tamaño carta", all(abs(doc_size$width - 612) < .01) && all(abs(doc_size$height - 792) < .01))
+excluded_text <- c("Listo para entregar", "Entrega final completada", "Trabajo generado y validado",
+  "Análisis exhaustivo de datos", "Resultados estratégicos clave", "Solución integral",
+  "Elaborado con inteligencia artificial", "Generado automáticamente", "213 validaciones PASS")
+check("Textos sin mensajes de ejecución o entrega", !any(vapply(excluded_text, function(phrase)
+  grepl(tolower(phrase), tolower(paste(pdf_text, doc_pdf_text)), fixed = TRUE), logical(1))))
+doc_boxes <- dplyr::bind_rows(pdftools::pdf_data(doc_pdf))
+check("PDF de explicación respeta márgenes", all(doc_boxes$x >= 71) && all(doc_boxes$x + doc_boxes$width <= 541) &&
+      all(doc_boxes$y >= 71) && all(doc_boxes$y + doc_boxes$height <= 721))
 protected_paths <- c("data/raw/Base_Migracion_2009-2026jun(3).xlsx",
   "data/processed/series_mensuales.csv", "outputs/tables/kpis.csv",
   "infografia/infografia_final.png", "infografia/infografia_final.pdf",
-  "docs/explicacion_diseno.docx", "docs/decisiones_diseno.md", "validation/resultados.csv")
+  "docs/explicacion_diseno.docx", "docs/explicacion_diseno.pdf", "docs/decisiones_diseno.md", "validation/resultados.csv")
 for (path in protected_paths) check(paste("Git ignora", path),
   system2("git", c("check-ignore", "--quiet", "--", shQuote(path)), stdout = FALSE, stderr = FALSE) == 0)
 check("Sin familias completamente fallidas", all(vapply(series_names, function(nm)

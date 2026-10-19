@@ -24,8 +24,11 @@ En este equipo también funciona la instalación privada preparada para el labor
 .\.local\R\bin\Rscript.exe run_lab9.R
 ```
 
-El comando instala dependencias faltantes, ejecuta los análisis, genera los entregables y
-valida resultados. Un fallo produce código de salida distinto de cero y
+El comando instala dependencias faltantes, reutiliza los resultados guardados, genera los documentos y
+valida resultados. Al reutilizar el análisis comprueba que el Excel conserve su hash; no
+reajusta modelos ni vuelve a sortear los intervalos de Prophet. Si no hay resultados
+guardados, ejecuta el análisis original. Para recalcularlo expresamente se puede usar
+`Rscript run_lab9.R --recalcular`. Un fallo produce código de salida distinto de cero y
 `validation/estado.txt`; no se acepta como entrega completa. Los ajustes ARIMA exhaustivos
 y Prophet para siete series pueden tardar varios minutos. El directorio de trabajo se
 resuelve a partir de la ubicación del script.
@@ -73,6 +76,7 @@ métricas históricas que no están disponibles. Véase `docs/revision_lab1.md`.
 - `infografia/infografia_final.png`: 3300 × 5100 píxeles, 300 dpi.
 - `infografia/infografia_final.pdf`: una página vertical de 11 × 17 pulgadas.
 - `docs/explicacion_diseno.docx`: carátula UVG, Times New Roman 12, márgenes de una pulgada.
+- `docs/explicacion_diseno.pdf`: mismo texto, Times New Roman y formato carta con márgenes de una pulgada.
 - `docs/decisiones_diseno.md`: contenido del documento generado.
 - `outputs/figures/`: gráficos auxiliares y diagnósticos.
 - `outputs/tables/`: KPIs, estacionalidad, cuadrante, modelos, métricas y predicciones.
